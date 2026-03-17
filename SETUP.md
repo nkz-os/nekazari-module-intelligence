@@ -118,7 +118,7 @@ REDIS_PORT=6379
 REDIS_PASSWORD=
 
 ORION_URL=http://localhost:1026
-CONTEXT_URL=https://nekazari.artotxiki.com/ngsi-ld-context.json
+CONTEXT_URL=https://YOUR_PLATFORM_DOMAIN/ngsi-ld-context.json
 
 LOG_LEVEL=INFO
 ```

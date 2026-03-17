@@ -7,8 +7,9 @@
   "short_description": "Advanced AI/ML analysis and predictions for agricultural data",
   "author": {
     "name": "Nekazari Team",
-    "email": "nekazari@robotika.cloud",
-    "organization": "k8-benetis"
+    "email": "",
+    "organization": "k8-benetis",
+    "repository": "https://github.com/k8-benetis/nekazari-module-intelligence"
   },
   "category": "analytics",
   "module_type": "ADDON_PAID",

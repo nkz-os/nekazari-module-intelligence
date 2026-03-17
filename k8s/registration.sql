@@ -49,7 +49,7 @@ INSERT INTO marketplace_modules (
     false,
     true,
     ARRAY['Farmer', 'TenantAdmin', 'PlatformAdmin'],
-    'https://nekazari.artotxiki.com/module-icons/intelligence.svg',
+    'https://YOUR_CDN_OR_DOMAIN/module-icons/intelligence.svg',
     '{"icon": "🧠", "color": "#8B5CF6", "features": ["AI-powered predictions", "Time series analysis", "ML model integration"]}'::jsonb
 ) ON CONFLICT (id) DO UPDATE SET
     display_name = EXCLUDED.display_name,

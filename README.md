@@ -102,11 +102,11 @@ pip install -r requirements.txt
 # Redis Configuration
 REDIS_HOST=redis-service
 REDIS_PORT=6379
-REDIS_PASSWORD=<password>
+REDIS_PASSWORD=  # set in env or K8s secret; leave empty only for no-auth Redis
 
 # Orion-LD Configuration
 ORION_URL=http://orion-ld-service:1026
-CONTEXT_URL=https://nekazari.artotxiki.com/ngsi-ld-context.json
+CONTEXT_URL=https://YOUR_PLATFORM_DOMAIN/ngsi-ld-context.json
 
 # Service Configuration
 LOG_LEVEL=INFO
