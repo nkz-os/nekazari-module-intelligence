@@ -49,4 +49,7 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Documentation (not pushed to GitHub)
+docs/
+
 

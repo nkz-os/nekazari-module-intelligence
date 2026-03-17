@@ -19,7 +19,15 @@ permissions and limitations under the License.
 """
 
 from functools import lru_cache
+from urllib.parse import quote_plus
+
 from pydantic_settings import BaseSettings
+
+
+def _redis_url(host: str, port: int, password: str, db: int) -> str:
+    """Build Redis URL with password safely quoted (special chars like @, : supported)."""
+    auth = f":{quote_plus(password)}@" if password else ""
+    return f"redis://{auth}{host}:{port}/{db}"
 
 
 class Settings(BaseSettings):
@@ -34,7 +42,7 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/intelligence"
     cors_origins: list[str] = []  # Set via CORS_ORIGINS env var; empty = deny all cross-origin requests
     
-    # Redis Configuration
+    # Redis Configuration (single instance; four logical DBs for strict segmentation)
     redis_host: str = "redis-service"
     redis_port: int = 6379
     redis_password: str = ""
@@ -55,6 +63,27 @@ class Settings(BaseSettings):
     # Platform timeseries-reader (for metadata-only predict: fetch historical data internally)
     timeseries_reader_url: str = "http://timeseries-reader-service:5000"
     
+    # Redis logical DBs (mandatory segmentation: plan ARCHITECTURE_V2_PLAN.md §4.1)
+    @property
+    def redis_broker_url(self) -> str:
+        """Celery broker (message queue). DB 0."""
+        return _redis_url(self.redis_host, self.redis_port, self.redis_password, 0)
+
+    @property
+    def redis_backend_url(self) -> str:
+        """Celery result backend. DB 1."""
+        return _redis_url(self.redis_host, self.redis_port, self.redis_password, 1)
+
+    @property
+    def redis_fast_cache_url(self) -> str:
+        """Fast-result cache (precomputed scalar bundles). DB 2."""
+        return _redis_url(self.redis_host, self.redis_port, self.redis_password, 2)
+
+    @property
+    def redis_jobqueue_url(self) -> str:
+        """Legacy JobQueue. DB 3."""
+        return _redis_url(self.redis_host, self.redis_port, self.redis_password, 3)
+
     @property
     def jwt_issuer_url(self) -> str:
         """Get the JWT issuer URL."""

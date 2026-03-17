@@ -1,0 +1,62 @@
+# =============================================================================
+# Intelligence Module - Celery Worker Deployment (V2)
+# =============================================================================
+# Same image as API; different command. Uses Redis DB 0 (broker), DB 1 (backend), DB 2 (fast cache write).
+# Worker must be started with: celery -A app.celery_app worker --loglevel=info --include app.tasks
+# =============================================================================
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: intelligence-worker
+  namespace: nekazari
+  labels:
+    app: intelligence-backend
+    component: worker
+    module: intelligence
+    nekazari.io/profile: addon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: intelligence-backend
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: intelligence-backend
+        component: worker
+        module: intelligence
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/k8-benetis/nekazari-module-intelligence/intelligence-backend:latest
+          imagePullPolicy: Always
+          command:
+            - celery
+            - -A
+            - app.celery_app
+            - worker
+            - --loglevel=info
+            - --include
+            - app.tasks
+          env:
+            - name: REDIS_HOST
+              value: "redis-service"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: password
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+          # No HTTP port; no probes (worker has no /health)
+      restartPolicy: Always

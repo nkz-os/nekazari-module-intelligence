@@ -25,7 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.api import router as api_router
-from app.core.redis_client import redis_client
+from app.core.redis_client import redis_client_jobqueue, redis_client_fast_cache
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +39,12 @@ async def lifespan(app: FastAPI):
                 settings.api_prefix,
                 settings.redis_host, settings.redis_port,
                 settings.orion_url)
-    await redis_client.connect()
+    await redis_client_jobqueue.connect()
+    await redis_client_fast_cache.connect()
     yield
     logger.info("%s shutting down", settings.app_name)
-    await redis_client.close()
+    await redis_client_jobqueue.close()
+    await redis_client_fast_cache.close()
 
 
 def create_app() -> FastAPI:

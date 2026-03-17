@@ -2,6 +2,7 @@
 Intelligence Module Backend - API Routes
 
 Main API router that includes all endpoint definitions.
+V2 canonical predict and evaluate_status use Celery (send_task) and fast cache (Redis DB 2).
 """
 
 import json
@@ -12,11 +13,16 @@ from fastapi import APIRouter, HTTPException, Header
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.core.redis_client import redis_client
+from app.core.redis_client import redis_client, redis_client_fast_cache
 from app.core.job_queue import JobQueue, JobStatus
 from app.core.worker import IntelligenceWorker
+from app.schemas.v2_predict import PredictV2Request, MODEL_REGISTRY
 
 logger = logging.getLogger(__name__)
+
+# Cache key prefix and TTL (must match worker write)
+V2_CACHE_KEY_PREFIX = "intelligence:cache:"
+V2_CACHE_TTL = 1800
 
 # Router setup
 router = APIRouter(tags=["Intelligence"])
@@ -313,5 +319,133 @@ async def list_plugins():
     ]
     
     return {"plugins": plugins}
+
+
+# =============================================================================
+# V2 Canonical API (model_id + features + execution_mode)
+# =============================================================================
+
+@router.get("/models", response_model=dict)
+async def list_models():
+    """
+    List registered models (model_id, feature schema). For discovery and validation.
+    """
+    models = []
+    for model_id, schema_cls in MODEL_REGISTRY.items():
+        models.append({
+            "model_id": model_id,
+            "features_schema": schema_cls.model_json_schema(),
+        })
+    return {"models": models}
+
+
+@router.post("/v2/predict")
+async def predict_v2(payload: PredictV2Request):
+    """
+    Canonical V2 predict: model_id + features + execution_mode.
+    Validates features against model schema (422 if invalid). Then cache read or enqueue.
+    """
+    try:
+        validated_features = payload.validate_features_for_model()
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    cache_key = payload.get_cache_key(validated_features)
+    full_key = f"{V2_CACHE_KEY_PREFIX}{cache_key}"
+    cache = redis_client_fast_cache.client
+    if not cache:
+        raise HTTPException(status_code=503, detail="Fast cache not connected")
+    if payload.execution_mode == "background_cached":
+        raw = await cache.get(full_key)
+        if raw:
+            try:
+                data = json.loads(raw)
+                return {"status": "success", "data": data}
+            except json.JSONDecodeError:
+                pass
+        from app.celery_app import celery_app
+        task = celery_app.send_task(
+            "app.tasks.run_lstm_inference",
+            kwargs={
+                "model_id": payload.model_id,
+                "features": validated_features,
+                "target_key": cache_key,
+            },
+        )
+        return {"status": "processing", "task_id": task.id}
+    else:
+        from app.celery_app import celery_app
+        task = celery_app.send_task(
+            "app.tasks.run_lstm_inference",
+            kwargs={
+                "model_id": payload.model_id,
+                "features": validated_features,
+                "target_key": cache_key,
+            },
+        )
+        try:
+            result = await asyncio.to_thread(task.get, timeout=5.0)
+            return {"status": "success", "data": result}
+        except Exception as e:
+            logger.warning("V2 on_demand_sync timeout or error: %s", e)
+            raise HTTPException(status_code=504, detail="Inference timeout")
+
+
+class EvaluateStatusRequest(BaseModel):
+    """Optional adapter: domain-specific payload (e.g. agrivoltaic telemetry)."""
+    tracker_id: str = Field(..., description="Tracker identifier")
+    parcel_id: str = Field(..., description="Parcel identifier")
+    timestamp: str = Field(..., description="ISO 8601 timestamp")
+    shadow_polygon_2d: list[Any] = Field(default_factory=list, description="Shadow geometry")
+    telemetry: Dict[str, Any] = Field(default_factory=dict, description="Telemetry (soil_moisture, etc.)")
+
+
+def _evaluate_status_to_features(body: EvaluateStatusRequest) -> tuple[str, dict[str, Any]]:
+    """Map evaluate_status payload to model_id + features (stub: extend with real mapping)."""
+    # Placeholder: derive features from telemetry and shadow; use olive_lstm_yield_v1
+    telemetry = body.telemetry or {}
+    shade_pct = 0.0
+    if body.shadow_polygon_2d:
+        # Stub: real impl would compute shade percentage from polygon
+        shade_pct = 50.0
+    features = {
+        "temp_max": float(telemetry.get("temp_max", 25.0)),
+        "soil_moisture": float(telemetry.get("soil_moisture", 0.2)),
+        "shade_percentage": shade_pct,
+    }
+    return "olive_lstm_yield_v1", features
+
+
+@router.post("/evaluate_status")
+async def evaluate_status(request: EvaluateStatusRequest):
+    """
+    Optional adapter: map domain payload to model_id + features, read from cache only.
+    Returns 200 + scalar bundle if cache hit; 200 + {} on miss (fail-safe for latency-sensitive callers).
+    """
+    model_id, features = _evaluate_status_to_features(request)
+    cache_key = request.tracker_id
+    full_key = f"{V2_CACHE_KEY_PREFIX}{cache_key}"
+    cache = redis_client_fast_cache.client
+    if not cache:
+        return {}
+    raw = await cache.get(full_key)
+    if not raw:
+        return {}
+    try:
+        data = json.loads(raw)
+        return {k: float(v) for k, v in data.items() if isinstance(v, (int, float))}
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
+@router.get("/v2/jobs/{task_id}")
+async def get_v2_task_status(task_id: str):
+    """Poll Celery task status (when 202 was returned from POST /v2/predict)."""
+    from app.celery_app import celery_app
+    result = celery_app.AsyncResult(task_id)
+    if result.ready():
+        if result.successful():
+            return {"status": "success", "data": result.result}
+        return {"status": "failed", "error": str(result.result)}
+    return {"status": "processing", "task_id": task_id}
 
 

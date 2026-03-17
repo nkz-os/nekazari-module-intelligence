@@ -49,11 +49,17 @@ docker run -p 8000:8000 \
 ## Architecture
 
 This is a **completely independent module** with:
--  **Zero dependencies** on Core services code
--  **Standalone Docker image** optimized for Data Science workloads
--  **REST API** for triggering analysis and predictions
--  **Redis-based job queue** for async processing
--  **Orion-LD integration** for writing Prediction entities (NGSI-LD standard)
+- **Zero dependencies** on Core services code
+- **Standalone Docker image** optimized for Data Science workloads
+- **REST API** for triggering analysis and predictions (V1 job-based + V2 model/features canonical API)
+- **Redis** with strict DB segmentation: DB 0 Celery broker, DB 1 Celery backend, DB 2 fast-result cache, DB 3 legacy job queue
+- **Celery workers** (separate deployment) for heavy inference; API pod only enqueues and reads cache
+- **Orion-LD integration** for writing Prediction entities (NGSI-LD standard)
+
+## API reference
+
+- **[API.md](API.md)** — Canonical API contract (V2 predict, models, evaluate_status, execution modes, integration checklist). Use this for integrating from any platform module.
+- **OpenAPI (live):** `GET /api/intelligence/docs`, `GET /api/intelligence/redoc` when the service is running.
 
 ## Communication Contract
 
@@ -109,9 +115,11 @@ LOG_LEVEL=INFO
 ## Development
 
 ```bash
-# Run locally
-uvicorn app:app --host 0.0.0.0 --port 8080 --reload
+cd backend
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
+
+For Celery worker (V2 inference): `celery -A app.celery_app worker --loglevel=info --include app.tasks`.
 
 ## Docker Build
 
@@ -121,12 +129,20 @@ docker build -t nekazari-module-intelligence:latest .
 
 ## API Endpoints
 
-### Health Check
+Full request/response details and V2 contract: see **[API.md](API.md)**.
+
+### Health check
 ```
 GET /health
 ```
 
-### Trigger Analysis
+### V2 canonical (new integrations)
+- `GET /api/intelligence/models` — List registered models and feature schemas
+- `POST /api/intelligence/v2/predict` — Inference with model_id + features + execution_mode (validates before enqueue; 422 on invalid)
+- `GET /api/intelligence/v2/jobs/{task_id}` — Poll async task
+- `POST /api/intelligence/evaluate_status` — Cache-only adapter (e.g. agrivoltaic)
+
+### Trigger analysis (V1)
 ```
 POST /api/intelligence/analyze
 Content-Type: application/json
@@ -144,7 +160,7 @@ X-Tenant-ID: <tenant_id>
 }
 ```
 
-### Trigger Prediction (writes to Orion-LD)
+### Trigger prediction (V1, writes to Orion-LD)
 ```
 POST /api/intelligence/predict
 Content-Type: application/json
@@ -185,9 +201,11 @@ Plugins implement the `IntelligencePlugin` interface. Current plugins:
 
 To add ML plugins, uncomment data science libraries in `requirements.txt` and implement new plugins in `intelligence_service/plugins/`.
 
-## Kubernetes Deployment
+## Kubernetes deployment
 
-See `k8s/` directory for deployment manifests. The module runs as a standalone service with its own namespace or selectors.
+- **API:** `k8s/backend-deployment.yaml` — FastAPI (uvicorn); label `component: backend`; Service selects this only.
+- **Worker:** `k8s/worker-deployment.yaml` — Celery worker (same image, different command); no HTTP, no Service.
+Apply both when using V2 inference.
 
 ## Migration Notes
 

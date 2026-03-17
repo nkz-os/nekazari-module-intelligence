@@ -116,5 +116,6 @@ spec:
       name: http
   selector:
     app: intelligence-backend
+    component: backend
 
 
