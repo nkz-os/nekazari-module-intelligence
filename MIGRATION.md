@@ -43,7 +43,7 @@ git init
 git add .
 git commit -m "Initial commit: Intelligence Module v1.0"
 git branch -M main
-git remote add origin https://github.com/k8-benetis/nekazari-module-intelligence.git
+git remote add origin https://github.com/nkz-os/nekazari-module-intelligence.git
 git push -u origin main
 ```
 
@@ -74,8 +74,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/k8-benetis/nekazari-module-intelligence:latest .
-          docker push ghcr.io/k8-benetis/nekazari-module-intelligence:latest
+          docker build -t ghcr.io/nkz-os/nekazari-module-intelligence:latest .
+          docker push ghcr.io/nkz-os/nekazari-module-intelligence:latest
 ```
 
 ### Step 5: Deploy

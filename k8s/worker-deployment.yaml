@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: ghcr.io/k8-benetis/nekazari-module-intelligence/intelligence-backend:latest
+          image: ghcr.io/nkz-os/nekazari-module-intelligence/intelligence-backend:latest
           imagePullPolicy: Always
           command:
             - celery

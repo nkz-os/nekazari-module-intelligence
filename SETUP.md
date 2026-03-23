@@ -64,7 +64,7 @@ tree -L 3  # Ver estructura completa
 
 ### Paso 2: Crear repositorio en GitHub
 
-1. Ve a https://github.com/k8-benetis
+1. Ve a https://github.com/nkz-os
 2. Click en "New repository"
 3. Nombre: `nekazari-module-intelligence`
 4. Descripción: "Standalone AI/ML Intelligence Module for Nekazari Platform"
@@ -86,7 +86,7 @@ git commit -m "feat: Initial commit - Intelligence Module v1.0
 - Kubernetes manifests included"
 
 # Conectar con el repositorio remoto (reemplaza <repo-url> con la URL de GitHub)
-git remote add origin https://github.com/k8-benetis/nekazari-module-intelligence.git
+git remote add origin https://github.com/nkz-os/nekazari-module-intelligence.git
 
 # Push inicial
 git branch -M main
@@ -95,7 +95,7 @@ git push -u origin main
 
 ### Paso 4: Verificar
 
-Ve a https://github.com/k8-benetis/nekazari-module-intelligence y verifica que todos los archivos estén presentes.
+Ve a https://github.com/nkz-os/nekazari-module-intelligence y verifica que todos los archivos estén presentes.
 
 ##  Configuración Local (Testing)
 
@@ -186,7 +186,7 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ghcr.io/k8-benetis/nekazari-module-intelligence:latest
+          tags: ghcr.io/nkz-os/nekazari-module-intelligence:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 ```

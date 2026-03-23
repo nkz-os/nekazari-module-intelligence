@@ -3,7 +3,7 @@ Intelligence Module Backend - FastAPI Application
 
 Main entry point for the Intelligence Module backend service.
 
-Copyright 2026 k8-benetis
+Copyright 2026 nkz-os
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

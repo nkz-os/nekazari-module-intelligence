@@ -8,8 +8,8 @@
   "author": {
     "name": "Nekazari Team",
     "email": "",
-    "organization": "k8-benetis",
-    "repository": "https://github.com/k8-benetis/nekazari-module-intelligence"
+    "organization": "nkz-os",
+    "repository": "https://github.com/nkz-os/nekazari-module-intelligence"
   },
   "category": "analytics",
   "module_type": "ADDON_PAID",
