@@ -22,6 +22,9 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 # Stage 2: Production image
 FROM python:3.11-slim
 
+# Link GHCR package to repo (enables GITHUB_TOKEN push in CI)
+LABEL org.opencontainers.image.source=https://github.com/nkz-os/nekazari-module-intelligence
+
 WORKDIR /app
 
 # Install runtime dependencies (minimal)
@@ -32,7 +35,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy installed packages from builder to a location accessible by appuser
 COPY --from=builder /root/.local /app/.local
 ENV PATH=/app/.local/bin:$PATH
-ENV PYTHONPATH=/app/.local/lib/python3.11/site-packages:$PYTHONPATH
+ENV PYTHONPATH=/app/.local/lib/python3.11/site-packages
 
 # Copy application code
 COPY app/ ./app/
