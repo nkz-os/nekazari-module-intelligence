@@ -7,6 +7,7 @@
 
 import logging
 import os
+import re
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import requests
@@ -18,18 +19,30 @@ ORION_URL = os.getenv('ORION_URL', 'http://orion-ld-service:1026')
 CONTEXT_URL = os.getenv('CONTEXT_URL', '')
 
 
+def _normalize_tenant(tenant_id: str) -> str:
+    """Normalize tenant ID for consistency across platform services."""
+    n = tenant_id.lower().strip().replace('-', '_').replace(' ', '_')
+    n = re.sub(r'[^a-z0-9_]', '', n)
+    return n.strip('_') or tenant_id
+
+
 def inject_fiware_headers(headers: Dict[str, str], tenant_id: str, context_url: Optional[str] = None) -> Dict[str, str]:
-    """Inject FIWARE headers for NGSI-LD requests."""
-    headers['Fiware-Service'] = tenant_id
+    """Inject NGSI-LD + FIWARE tenant headers for Orion-LD requests.
+
+    Sends BOTH NGSILD-Tenant (ETSI standard) AND Fiware-Service (legacy)
+    with normalized tenant ID.
+    """
+    n = _normalize_tenant(tenant_id)
+    headers['NGSILD-Tenant'] = n
+    headers['Fiware-Service'] = n
     headers['Fiware-ServicePath'] = '/'
     headers['Content-Type'] = 'application/ld+json'
     headers['Accept'] = 'application/ld+json'
-    
-    if context_url:
-        headers['Link'] = f'<{context_url}>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"'
-    elif CONTEXT_URL:
-        headers['Link'] = f'<{CONTEXT_URL}>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"'
-    
+
+    url = context_url or CONTEXT_URL
+    if url:
+        headers['Link'] = f'<{url}>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"'
+
     return headers
 
 
