@@ -398,7 +398,7 @@ class EvaluateStatusRequest(BaseModel):
     tracker_id: str = Field(..., description="Tracker identifier")
     parcel_id: str = Field(..., description="Parcel identifier")
     timestamp: str = Field(..., description="ISO 8601 timestamp")
-    shadow_polygon_2d: list[Any] = Field(default_factory=list, description="Shadow geometry")
+    shadow_polygon_2d: list[Any] = Field(default_factory=list, max_length=10000, description="Shadow geometry (max 10,000 coordinate pairs)")
     telemetry: Dict[str, Any] = Field(default_factory=dict, description="Telemetry (soil_moisture, etc.)")
 
 
