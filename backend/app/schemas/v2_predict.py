@@ -24,10 +24,23 @@ class OliveQualityFeatures(BaseModel):
     shade_percentage: float = Field(..., ge=0, le=100)
 
 
+class TimeSeriesForecastFeatures(BaseModel):
+    """Features for gradient_boosting_predictor — time-series forecasting."""
+    entity_id: str = Field(..., description="Entity ID for historical data fetch")
+    attribute: str = Field(..., description="Attribute to forecast")
+    start_time: str = Field(..., description="Start of historical range (ISO 8601)")
+    end_time: str = Field(..., description="End of historical range (ISO 8601)")
+    prediction_horizon: int = Field(24, ge=1, le=168, description="Forecast horizon in hours")
+
+
 # Registry: model_id -> feature schema class (for validation and GET /models)
+# NOTE: gradient_boosting_predictor is registered for V2 discovery but the
+# primary integration path is V1 (JobQueue -> in-process worker). Full V2
+# Celery integration will be completed in a future phase.
 MODEL_REGISTRY: dict[str, type[BaseModel]] = {
     "olive_lstm_yield_v1": OliveYieldFeatures,
     "olive_lstm_quality_v1": OliveQualityFeatures,
+    "gradient_boosting_predictor": TimeSeriesForecastFeatures,
 }
 
 
