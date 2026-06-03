@@ -92,10 +92,13 @@ async def initialize_worker():
 
 
 def extract_tenant_id(authorization: Optional[str] = None, x_tenant_id: Optional[str] = Header(None)) -> str:
-    """Extract tenant ID from headers."""
+    """Extract tenant ID from headers. Raises 400 if missing."""
     if x_tenant_id:
         return x_tenant_id
-    return "default"
+    raise HTTPException(
+        status_code=400,
+        detail="X-Tenant-ID header is required for multi-tenant operations",
+    )
 
 
 # =============================================================================
