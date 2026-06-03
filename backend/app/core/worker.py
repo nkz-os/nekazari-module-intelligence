@@ -11,6 +11,7 @@ from app.core.job_queue import JobQueue, JobStatus
 from app.core.orion_client import create_prediction_entity
 from app.core.timeseries_client import fetch_historical_data
 from app.plugins.simple_predictor import SimplePredictor
+from app.plugins.gradient_boosting_predictor import GradientBoostingPredictor
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,8 @@ class IntelligenceWorker:
     def __init__(self, job_queue: JobQueue):
         self.job_queue = job_queue
         self.plugins = {
-            "simple_predictor": SimplePredictor()
+            "simple_predictor": SimplePredictor(),
+            "gradient_boosting_predictor": GradientBoostingPredictor(),
         }
         self.running = False
     
