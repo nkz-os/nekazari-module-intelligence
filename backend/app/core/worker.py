@@ -98,7 +98,7 @@ class IntelligenceWorker:
         # Generate prediction entity ID
         prediction_id = f"urn:ngsi-ld:Prediction:{tenant_id}:{entity_id.split(':')[-1]}-{predicted_attribute}"
         
-        orion_result = create_prediction_entity(
+        orion_result = await create_prediction_entity(
             entity_id=prediction_id,
             tenant_id=tenant_id,
             ref_entity_id=entity_id,

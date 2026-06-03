@@ -10,7 +10,7 @@ import os
 import re
 from typing import Dict, Any, Optional, List
 from datetime import datetime
-import requests
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ def inject_fiware_headers(headers: Dict[str, str], tenant_id: str, context_url: 
     return headers
 
 
-def create_prediction_entity(
+async def create_prediction_entity(
     entity_id: str,
     tenant_id: str,
     ref_entity_id: str,
@@ -125,7 +125,8 @@ def create_prediction_entity(
         
         # Try to create entity
         orion_endpoint = f"{ORION_URL}/ngsi-ld/v1/entities"
-        response = requests.post(orion_endpoint, json=entity, headers=headers, timeout=10)
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(orion_endpoint, json=entity, headers=headers)
         
         if response.status_code in [201, 204]:
             logger.info(f"Created Prediction entity {entity_id} for {ref_entity_id}")
@@ -133,7 +134,7 @@ def create_prediction_entity(
         elif response.status_code == 409:
             # Entity already exists, update it
             logger.info(f"Prediction entity {entity_id} already exists, updating...")
-            return update_prediction_entity(entity_id, tenant_id, predictions, confidence, headers)
+            return await update_prediction_entity(entity_id, tenant_id, predictions, confidence, headers)
         else:
             logger.error(f"Failed to create Prediction entity: {response.status_code} - {response.text[:200]}")
             return None
@@ -143,7 +144,7 @@ def create_prediction_entity(
         return None
 
 
-def update_prediction_entity(
+async def update_prediction_entity(
     entity_id: str,
     tenant_id: str,
     predictions: List[Dict[str, Any]],
@@ -191,7 +192,8 @@ def update_prediction_entity(
         
         # Update entity attributes
         orion_endpoint = f"{ORION_URL}/ngsi-ld/v1/entities/{entity_id}/attrs"
-        response = requests.patch(orion_endpoint, json=update_payload, headers=headers, timeout=10)
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.patch(orion_endpoint, json=update_payload, headers=headers)
         
         if response.status_code in [200, 204]:
             logger.info(f"Updated Prediction entity {entity_id}")
