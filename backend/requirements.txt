@@ -14,27 +14,25 @@ redis==5.0.1
 # Celery for V2 async inference (API/Worker split)
 celery[redis]==5.4.0
 
-# HTTP client for Orion-LD
-requests==2.31.0
+# Async HTTP client for Orion-LD (replaces requests)
+httpx==0.27.0
 
 # Async utilities
 tenacity==9.0.0
 
 # JWT verification (optional - for future Keycloak integration)
 python-jose[cryptography]==3.3.0
-httpx==0.27.0
 
 # Arrow + DataFrame for S2S timeseries (metadata-only predict)
 pyarrow>=14.0.0
 pandas>=2.0.0
 
 # =============================================================================
-# Data Science Libraries (Optional - uncomment when needed)
+# Data Science Libraries
 # =============================================================================
-# numpy==1.24.3
-# scikit-learn==1.3.2
-# scikit-learn==1.3.2
-# scipy==1.11.4
+numpy>=1.24.3
+scikit-learn==1.3.2
+scipy==1.11.4
 
 # =============================================================================
 # Deep Learning (Optional - uncomment when needed)
