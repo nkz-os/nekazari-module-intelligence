@@ -14,6 +14,9 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+# NGSI-LD core context (ETSI standard) — used as fallback when CONTEXT_URL is not configured
+NGSI_LD_CORE_CONTEXT = "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context.jsonld"
+
 # Configuration
 ORION_URL = os.getenv('ORION_URL', 'http://orion-ld-service:1026')
 CONTEXT_URL = os.getenv('CONTEXT_URL', '')
@@ -80,7 +83,7 @@ def create_prediction_entity(
         
         # Build Prediction entity following NGSI-LD standard
         entity = {
-            '@context': [CONTEXT_URL] if CONTEXT_URL else [],
+            '@context': [CONTEXT_URL or NGSI_LD_CORE_CONTEXT],
             'id': entity_id,
             'type': 'Prediction',
             'refEntity': {
