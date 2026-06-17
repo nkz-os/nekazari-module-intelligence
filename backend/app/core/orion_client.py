@@ -1,3 +1,4 @@
+from app.common.tenant_utils import normalize_tenant_id
 #!/usr/bin/env python3
 # =============================================================================
 # Orion Client - NGSI-LD Entity Writer for Predictions
@@ -22,20 +23,13 @@ ORION_URL = os.getenv('ORION_URL', 'http://orion-ld-service:1026')
 CONTEXT_URL = os.getenv('CONTEXT_URL', '')
 
 
-def _normalize_tenant(tenant_id: str) -> str:
-    """Normalize tenant ID for consistency across platform services."""
-    n = tenant_id.lower().strip().replace('-', '_').replace(' ', '_')
-    n = re.sub(r'[^a-z0-9_]', '', n)
-    return n.strip('_') or tenant_id
-
-
 def inject_fiware_headers(headers: Dict[str, str], tenant_id: str, context_url: Optional[str] = None) -> Dict[str, str]:
     """Inject NGSI-LD + FIWARE tenant headers for Orion-LD requests.
 
     Sends BOTH NGSILD-Tenant (ETSI standard) AND Fiware-Service (legacy)
     with normalized tenant ID.
     """
-    n = _normalize_tenant(tenant_id)
+    n = normalize_tenant_id(tenant_id)
     headers['NGSILD-Tenant'] = n
     headers['Fiware-Service'] = n
     headers['Fiware-ServicePath'] = '/'
