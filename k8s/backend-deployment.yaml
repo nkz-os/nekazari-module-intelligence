@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/nkz-os/nekazari-module-intelligence/intelligence-backend:latest
+          image: ghcr.io/nkz-os/nekazari-module-intelligence/intelligence-backend@sha256:c61a9d4d7b8764b6b5a319b2c389ade73a77fca7310c7da70d5c124ed9801f92
           imagePullPolicy: Always
           ports:
             - name: http
