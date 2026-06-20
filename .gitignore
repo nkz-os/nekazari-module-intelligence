@@ -65,3 +65,10 @@ docs/audits/
 *HANDOVER*.md
 HANDOFF.md
 CURRENT_STATE.md
+
+# Security: sensitive files
+*.pem
+*.key
+apikey_*.txt
+*.apikey
+*-secret*
