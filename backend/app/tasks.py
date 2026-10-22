@@ -4,13 +4,13 @@ Celery tasks for V2 inference. Loaded only in the worker process (e.g. celery -A
 
 import json
 import logging
-import random
 from typing import Any
 
 import redis
 
 from app.celery_app import celery_app
 from app.config import get_settings
+from app.schemas.v2_predict import AVAILABLE_MODELS
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,19 @@ def _get_fast_cache_sync():
 
 
 FAST_CACHE_TTL_SECONDS = 1800  # 30 min
-MAX_JITTER_SECONDS = 300  # 5 min spread for precomputation
+
+
+class ModelNotAvailableError(RuntimeError):
+    """Raised when a registered model_id has no deployed implementation."""
+
+
+def _run_model(model_id: str, features: dict[str, Any]) -> dict[str, Any]:
+    """Dispatch to the deployed model implementation.
+
+    No V2 model is deployed yet. Never return placeholder values here: downstream
+    consumers (e.g. tracker actuation rules) act on these scalars.
+    """
+    raise ModelNotAvailableError(f"No implementation deployed for model_id={model_id}")
 
 
 @celery_app.task(name="app.tasks.run_lstm_inference", bind=True, max_retries=3)
@@ -32,43 +44,20 @@ def run_lstm_inference(
 ) -> dict[str, Any]:
     """
     Run inference and write scalar bundle to fast cache (Redis DB 2).
-    Called by API (on_demand_sync wait) or by precomputation batch (with jitter).
+    Fails without caching when the model is not available.
     """
+    if model_id not in AVAILABLE_MODELS:
+        logger.warning("Inference refused: model not available model_id=%s key=%s", model_id, target_key)
+        raise ModelNotAvailableError(f"Model not available: {model_id}")
     try:
-        # Stub: replace with real model load and inference (e.g. model_registry.predict)
-        scalar_bundle: dict[str, Any] = {
-            "stress_index": 0.82,
-            "fruit_count_pred": 1345,
-            "oil_concentration_pred": 16.4,
-        }
+        scalar_bundle = _run_model(model_id, features)
         cache = _get_fast_cache_sync()
         cache_key = f"intelligence:cache:{target_key}"
         cache.setex(cache_key, FAST_CACHE_TTL_SECONDS, json.dumps(scalar_bundle))
         logger.info("Cached inference result for key=%s model_id=%s", target_key, model_id)
         return scalar_bundle
+    except ModelNotAvailableError:
+        raise
     except Exception as exc:
         logger.exception("run_lstm_inference failed for key=%s", target_key)
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
-
-
-@celery_app.task(name="app.tasks.trigger_precomputation_batch")
-def trigger_precomputation_batch() -> None:
-    """
-    Master task run by Celery Beat every 15 min. Fans out inference tasks with jitter
-    to avoid thundering herd (ARCHITECTURE_V2_PLAN.md §4.3).
-    """
-    # Placeholder: replace with real entity discovery (Orion, config, or registration).
-    entities = ["parcel_001", "parcel_002", "parcel_003"]
-    model_id = "olive_lstm_yield_v1"
-    for entity_id in entities:
-        features = {
-            "temp_max": 30.0,
-            "soil_moisture": 0.15,
-            "shade_percentage": 65.0,
-        }
-        jitter = random.randint(0, MAX_JITTER_SECONDS)
-        run_lstm_inference.apply_async(
-            kwargs={"model_id": model_id, "features": features, "target_key": entity_id},
-            countdown=jitter,
-        )
-    logger.info("Precomputation batch enqueued %d entities with jitter", len(entities))
