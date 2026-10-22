@@ -20,8 +20,8 @@ def test_inject_fiware_headers_includes_tenant():
     """Headers must include both NGSILD-Tenant and Fiware-Service."""
     headers = {}
     result = inject_fiware_headers(headers, tenant_id="My-Tenant")
-    assert result["NGSILD-Tenant"] == "my_tenant"
-    assert result["Fiware-Service"] == "my_tenant"
+    assert result["NGSILD-Tenant"] == "my-tenant"
+    assert result["Fiware-Service"] == "my-tenant"
     assert result["Fiware-ServicePath"] == "/"
     assert result["Content-Type"] == "application/ld+json"
 
