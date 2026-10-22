@@ -1,0 +1,74 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (not pushed to GitHub)
+docs/
+
+
+docs/superpowers/
+docs/internal/
+internal-docs/
+.ai/
+docs/plans/
+docs/specs/
+docs/audits/
+*_PLAN.md
+*_SPEC.md
+*HANDOVER*.md
+HANDOFF.md
+CURRENT_STATE.md
+
+# Security: sensitive files
+*.pem
+*.key
+apikey_*.txt
+*.apikey
+*-secret*

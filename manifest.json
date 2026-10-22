@@ -1,0 +1,68 @@
+{
+  "id": "intelligence",
+  "name": "intelligence",
+  "display_name": "Intelligence Module",
+  "version": "1.0.0",
+  "description": "AI/ML Intelligence Module - Analysis and Prediction Service for Nekazari Platform",
+  "description_i18n": {
+    "es": "Módulo de Inteligencia AI/ML — Servicio de Análisis y Predicción para la Plataforma Nekazari",
+    "en": "AI/ML Intelligence Module - Analysis and Prediction Service for Nekazari Platform",
+    "eu": "AI/ML Adimen Modulua — Analisi eta Iragarpen Zerbitzua Nekazari Plataformarentzat",
+    "fr": "Module d'Intelligence AI/ML — Service d'Analyse et de Prédiction pour la Plateforme Nekazari",
+    "pt": "Módulo de Inteligência AI/ML — Serviço de Análise e Previsão para a Plataforma Nekazari",
+    "ca": "Mòdul d'Intel·ligència AI/ML — Servei d'Anàlisi i Predicció per a la Plataforma Nekazari"
+  },
+  "short_description": "Advanced AI/ML analysis and predictions for agricultural data",
+  "author": {
+    "name": "Nekazari Team",
+    "email": "",
+    "organization": "nkz-os",
+    "repository": "https://github.com/nkz-os/nekazari-module-intelligence"
+  },
+  "category": "analytics",
+  "module_type": "ADDON_PAID",
+  "required_plan_type": "premium",
+  "pricing_tier": "PAID",
+  "route_path": "/intelligence",
+  "label": "Intelligence",
+  "icon": "brain-circuit",
+  "icon_url": "",
+  "required_roles": ["Farmer", "TenantAdmin", "PlatformAdmin"],
+  "dependencies": {
+    "sdk_version": "^1.0.0",
+    "platform_version": "^2.0.0"
+  },
+  "permissions": {
+    "api_access": [
+      "/api/intelligence/*"
+    ],
+    "storage_access": false,
+    "external_requests": []
+  },
+  "build_config": {
+    "type": "backend-only",
+    "has_frontend": false,
+    "backend_service": "intelligence-backend"
+  },
+  "metadata": {
+    "icon": "🧠",
+    "color": "#8B5CF6",
+    "features": [
+      "AI-powered predictions",
+      "Time series analysis",
+      "ML model integration",
+      "Async job processing",
+      "Orion-LD integration"
+    ],
+    "screenshots": [],
+    "api_endpoints": [
+      "/api/intelligence/analyze",
+      "/api/intelligence/predict",
+      "/api/intelligence/jobs/{job_id}",
+      "/api/intelligence/webhook/n8n",
+      "/api/intelligence/plugins"
+    ]
+  }
+}
+
+
