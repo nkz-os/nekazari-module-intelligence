@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from app.core.redis_client import redis_client, redis_client_fast_cache
 from app.core.job_queue import JobQueue, JobStatus
 from app.core.worker import IntelligenceWorker
-from app.schemas.v2_predict import PredictV2Request, MODEL_REGISTRY
+from app.schemas.v2_predict import PredictV2Request, MODEL_REGISTRY, AVAILABLE_MODELS
 
 logger = logging.getLogger(__name__)
 
@@ -337,6 +337,7 @@ async def list_models():
     for model_id, schema_cls in MODEL_REGISTRY.items():
         models.append({
             "model_id": model_id,
+            "available": model_id in AVAILABLE_MODELS,
             "features_schema": schema_cls.model_json_schema(),
         })
     return {"models": models}
@@ -352,6 +353,8 @@ async def predict_v2(payload: PredictV2Request):
         validated_features = payload.validate_features_for_model()
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    if payload.model_id not in AVAILABLE_MODELS:
+        raise HTTPException(status_code=503, detail=f"Model not available: {payload.model_id}")
     cache_key = payload.get_cache_key(validated_features)
     full_key = f"{V2_CACHE_KEY_PREFIX}{cache_key}"
     cache = redis_client_fast_cache.client

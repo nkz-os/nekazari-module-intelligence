@@ -43,6 +43,10 @@ MODEL_REGISTRY: dict[str, type[BaseModel]] = {
     "gradient_boosting_predictor": TimeSeriesForecastFeatures,
 }
 
+# Registered model_ids that have a deployed V2 implementation. Registered but
+# unavailable models are rejected with 503 instead of returning placeholder values.
+AVAILABLE_MODELS: frozenset[str] = frozenset()
+
 
 def get_model_schema(model_id: str) -> type[BaseModel] | None:
     """Return the Pydantic model for the given model_id, or None if unknown."""

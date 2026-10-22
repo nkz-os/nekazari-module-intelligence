@@ -51,3 +51,24 @@ def test_evaluate_status_rejects_oversized_polygon(client):
     assert response.status_code == 422
 
 
+
+
+def test_models_report_unavailable(client):
+    """Registered models without a deployed implementation are flagged unavailable."""
+    response = client.get("/api/intelligence/models")
+    assert response.status_code == 200
+    assert all(m["available"] is False for m in response.json()["models"])
+
+
+def test_v2_predict_unavailable_model_returns_503(client):
+    """An unavailable model must fail explicitly, never return placeholder values."""
+    response = client.post(
+        "/api/intelligence/v2/predict",
+        json={
+            "model_id": "olive_lstm_yield_v1",
+            "features": {"temp_max": 30.0, "soil_moisture": 0.15, "shade_percentage": 65.0},
+            "execution_mode": "on_demand_sync",
+        },
+    )
+    assert response.status_code == 503
+    assert "not available" in response.json()["detail"]

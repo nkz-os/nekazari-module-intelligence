@@ -6,7 +6,6 @@ API pod only imports this module to send tasks (send_task); it does not import a
 """
 
 from celery import Celery
-from celery.schedules import crontab
 
 from app.config import get_settings
 
@@ -29,13 +28,6 @@ def _make_celery_app() -> Celery:
         worker_concurrency=2,
         task_time_limit=300,
     )
-    # Precomputation: master task every 15 min; task itself fans out with jitter
-    app.conf.beat_schedule = {
-        "precompute-every-15-minutes": {
-            "task": "app.tasks.trigger_precomputation_batch",
-            "schedule": crontab(minute="*/15"),
-        },
-    }
     return app
 
 

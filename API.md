@@ -20,6 +20,7 @@ List registered models and their feature schemas. Use this to discover valid `mo
   "models": [
     {
       "model_id": "olive_lstm_yield_v1",
+      "available": false,
       "features_schema": { ... }
     },
     {
@@ -31,6 +32,9 @@ List registered models and their feature schemas. Use this to discover valid `mo
 ```
 
 Each `features_schema` is a JSON Schema (Pydantic-generated) describing required/optional keys and types.
+Each entry also carries `available` (bool): `false` means the model is registered but has no deployed
+implementation. `POST /v2/predict` answers **503** for an unavailable model; it never returns placeholder values.
+No V2 model is available yet.
 
 **Registered models (current):**
 
