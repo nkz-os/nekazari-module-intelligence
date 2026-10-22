@@ -21,7 +21,7 @@ httpx==0.27.0
 tenacity==9.0.0
 
 # JWT verification (optional - for future Keycloak integration)
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.5.0
 
 # Arrow + DataFrame for S2S timeseries (metadata-only predict)
 pyarrow==24.0.0
